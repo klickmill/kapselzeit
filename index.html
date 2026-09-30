@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Kapselzeit: Vitamine und Nahrungsergänzung abhaken, Vorrat im Blick, rechtzeitig nachkaufen.">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1116" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kapselzeit">
+<title>Kapselzeit</title>
+<style>
+  /* Kühles Grau mit Kobaltblau als einzigem Akzent. Rot heißt: reicht nicht mehr,
+     Bernstein: bald nachkaufen. Kontraste gerechnet, alle Textfarben über 4,5 zu 1. */
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f5f7; --card: #ffffff; --rand: #e3e6eb; --vertieft: #eef0f3;
+    --text: #111827; --leise: #4b5563;
+    --akzent: #1d4ed8; --auf-akzent: #ffffff; --akzent-flaeche: #eef4ff;
+    --rot: #b42318; --warn: #92400e;
+    --schatten: 0 1px 2px rgba(17, 24, 39, .05), 0 8px 24px rgba(17, 24, 39, .05);
+    --r-karte: 16px; --r-feld: 12px;
+    --schrift: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1116; --card: #171b22; --rand: #262c36; --vertieft: #1f242d;
+      --text: #e8ebf0; --leise: #9aa3af;
+      --akzent: #60a5fa; --auf-akzent: #0b1b3a; --akzent-flaeche: #15203a;
+      --rot: #f87171; --warn: #fbbf24; --schatten: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--schrift); font-variant-numeric: tabular-nums;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  .seite { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 16px; }
+  .kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 4px 0; }
+  .marke { margin: 0; font-size: 1.25rem; font-weight: 750; letter-spacing: -0.01em; }
+  .karte { background: var(--card); border: 1px solid var(--rand); border-radius: var(--r-karte); box-shadow: var(--schatten); padding: 18px; }
+  h2 { margin: 0 0 12px; font-size: 1.05rem; font-weight: 700; }
+  h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+  p { margin: 0 0 10px; }
+  .leise { color: var(--leise); }
+  .klein { font-size: 0.875rem; }
+  a { color: var(--akzent); }
+  .rot { color: var(--rot); }
+  .warn { color: var(--warn); }
+  .flaeche { background: var(--akzent-flaeche); border-radius: var(--r-feld); padding: 10px 12px; font-size: 0.9rem; margin: 0; }
+
+  .fortschritt { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .fortschritt strong { font-size: 1.6rem; font-weight: 750; letter-spacing: -0.01em; white-space: nowrap; }
+  .fortschritt span { text-align: right; }
+  .zeit-kopf { margin: 16px 0 6px; font-size: 0.85rem; font-weight: 700; color: var(--leise); }
+  .zeit-kopf:first-of-type { margin-top: 4px; }
+  .abhaken { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 12px; border: 1px solid var(--rand); border-radius: var(--r-feld); cursor: pointer; }
+  .abhaken + .abhaken { margin-top: 8px; }
+  .abhaken input { width: 24px; height: 24px; accent-color: var(--akzent); flex: none; margin: 0; }
+  .abhaken span { min-width: 0; overflow-wrap: anywhere; }
+  .abhaken small { color: var(--leise); display: block; }
+  .abhaken.fertig span > b { text-decoration: line-through; text-decoration-color: var(--leise); }
+
+  .zeile-k { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 10px 0; }
+  .zeile-k + .zeile-k { border-top: 1px solid var(--rand); }
+  .zeile-k .was { min-width: 0; overflow-wrap: anywhere; }
+  .zeile-k small { display: block; }
+
+  form { display: grid; gap: 12px; }
+  .feld { display: grid; gap: 6px; }
+  .feld label, .label { font-size: 0.9rem; font-weight: 600; }
+  .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  input[type="text"], input[type="time"], textarea {
+    width: 100%; min-height: 48px; padding: 10px 14px; border: 1px solid var(--rand); border-radius: var(--r-feld);
+    background: var(--card); color: var(--text); font: inherit; }
+  textarea { min-height: 72px; resize: vertical; }
+  input::placeholder, textarea::placeholder { color: var(--leise); opacity: 1; }
+  input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--akzent); outline-offset: 2px; }
+  .zeiten { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  @media (max-width: 400px) { .zeiten { grid-template-columns: 1fr 1fr; } }
+  .zeiten input { position: absolute; opacity: 0; pointer-events: none; }
+  .zeiten label { display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid var(--rand); border-radius: var(--r-feld);
+    font-weight: 600; font-size: 0.9rem; cursor: pointer; background: var(--vertieft); color: var(--leise); text-align: center; padding: 4px; }
+  .zeiten input:checked + label { background: var(--akzent); border-color: var(--akzent); color: var(--auf-akzent); }
+  .zeiten input:focus-visible + label { outline: 2px solid var(--akzent); outline-offset: 2px; }
+  .fehler { color: var(--rot); font-size: 0.9rem; margin: 0; }
+
+  button { font: inherit; cursor: pointer; }
+  .knopf { min-height: 48px; padding: 10px 18px; border-radius: var(--r-feld); border: 1px solid var(--rand); background: var(--card); color: var(--text); font-weight: 650; transition: transform .12s ease; }
+  .knopf:active { transform: scale(.98); }
+  .knopf.haupt { background: var(--akzent); border-color: var(--akzent); color: var(--auf-akzent); }
+  .knopf.gefahr { color: var(--rot); }
+  .knopf.k { min-height: 44px; padding: 8px 14px; font-size: 0.9rem; }
+  @media (prefers-reduced-motion: reduce) { .knopf { transition: none; } .knopf:active { transform: none; } }
+  .knopfreihe { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  .mittel { border: 1px solid var(--rand); border-radius: var(--r-feld); padding: 14px; display: grid; gap: 6px; }
+  .mittel + .mittel { margin-top: 10px; }
+  .mittel.markiert { border-color: var(--akzent); }
+  .mittel .zeile { margin: 0; font-size: 0.9rem; color: var(--leise); overflow-wrap: anywhere; }
+
+  details summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: "+"; color: var(--leise); font-size: 1.3rem; }
+  details[open] summary::after { content: "−"; }
+  details[open] summary { margin-bottom: 12px; }
+  .uhren { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  .hinweis { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    width: min(528px, calc(100% - 32px)); display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--text); color: var(--bg); border-radius: var(--r-feld); padding: 8px 8px 8px 16px; box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+  .hinweis button { min-height: 44px; border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; padding: 0 10px; }
+  .leer { text-align: center; padding: 8px 4px; }
+  .fuss { text-align: center; font-size: 0.875rem; color: var(--leise); padding-top: 4px; }
+  .fuss a { color: var(--leise); }
+</style>
+</head>
+<body>
+<main class="seite">
+
+  <header class="kopf">
+    <h1 class="marke">Kapselzeit</h1>
+    <span class="leise klein" id="datum-heute"></span>
+  </header>
+
+  <section class="karte" id="willkommen" aria-labelledby="wk-titel" hidden style="border-color: var(--akzent)">
+    <h2 id="wk-titel">Abhaken und nie wieder leer</h2>
+    <p>Trag deine Vitamine und Nahrungsergänzung mit Zeit und Vorrat ein. Kapselzeit zeigt dir, was heute noch fehlt, und sagt rechtzeitig, wann eine Packung leer wird.</p>
+    <p class="flaeche">Kapselzeit merkt sich nur, was du selbst einträgst. Es gibt keine Empfehlungen zu Dosis, Kombination oder Wirkung. Halte dich an die Packungsbeilage oder an die Absprache mit deiner Ärztin oder deinem Arzt.</p>
+    <button class="knopf haupt" type="button" id="wk-los" data-ev="start" style="margin-top:12px">Erstes Mittel eintragen</button>
+  </section>
+
+  <section class="karte" aria-labelledby="heute-titel">
+    <h2 id="heute-titel">Heute</h2>
+    <div class="fortschritt" id="fortschritt" hidden>
+      <strong id="fortschritt-zahl"></strong>
+      <span class="leise klein" id="quote"></span>
+    </div>
+    <div id="heute"></div>
+  </section>
+
+  <section class="karte" aria-labelledby="vorrat-titel">
+    <h2 id="vorrat-titel">Bald nachkaufen</h2>
+    <div id="vorrat"></div>
+    <div class="knopfreihe" id="einkauf-reihe" hidden style="margin-top:12px">
+      <button class="knopf k" type="button" id="einkauf-teilen" data-ev="einkauf_teilen">Einkaufsliste teilen</button>
+    </div>
+  </section>
+
+  <section class="karte" aria-labelledby="form-titel" id="form-karte">
+    <h2 id="form-titel">Neues Mittel</h2>
+    <form id="formular" novalidate>
+      <div class="feld">
+        <label for="f-name">Name</label>
+        <input type="text" id="f-name" maxlength="60" autocomplete="off" placeholder="zum Beispiel Vitamin D">
+      </div>
+      <p class="fehler" id="f-name-fehler" role="alert" hidden></p>
+      <div class="zwei">
+        <div class="feld">
+          <label for="f-menge">Form</label>
+          <input type="text" id="f-menge" maxlength="40" autocomplete="off" placeholder="Kapsel, Tablette, Tropfen">
+        </div>
+        <div class="feld">
+          <label for="f-einheiten">Stück je Einnahme</label>
+          <input type="text" id="f-einheiten" inputmode="numeric" autocomplete="off" placeholder="1">
+        </div>
+      </div>
+      <fieldset style="border:0;padding:0;margin:0">
+        <legend class="label" style="margin-bottom:6px">Wann nimmst du es?</legend>
+        <div class="zeiten" id="f-zeiten"></div>
+      </fieldset>
+      <p class="fehler" id="f-zeiten-fehler" role="alert" hidden></p>
+      <div class="zwei">
+        <div class="feld">
+          <label for="f-vorrat">Vorrat jetzt (Stück)</label>
+          <input type="text" id="f-vorrat" inputmode="numeric" autocomplete="off" placeholder="freiwillig">
+        </div>
+        <div class="feld">
+          <label for="f-packung">Stück je Packung</label>
+          <input type="text" id="f-packung" inputmode="numeric" autocomplete="off" placeholder="freiwillig">
+        </div>
+      </div>
+      <p class="fehler" id="f-zahl-fehler" role="alert" hidden></p>
+      <div class="feld">
+        <label for="f-notiz">Notiz</label>
+        <textarea id="f-notiz" maxlength="300" rows="2" placeholder="zum Beispiel mit dem Frühstück"></textarea>
+      </div>
+      <div class="knopfreihe">
+        <button class="knopf haupt" type="submit" id="f-speichern">Speichern</button>
+        <button class="knopf" type="button" id="f-abbrechen" hidden>Abbrechen</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="karte" aria-labelledby="liste-titel">
+    <h2 id="liste-titel">Deine Mittel</h2>
+    <div id="liste"></div>
+    <p class="klein leise" style="margin:14px 0 0">Kapselzeit merkt sich nur, was du einträgst, und gibt keine Empfehlungen zu Dosis, Kombination oder Wirkung. Halte dich an die Packungsbeilage oder an die Absprache mit deiner Ärztin oder deinem Arzt.</p>
+  </section>
+
+  <section class="karte">
+    <details id="einstellungen">
+      <summary data-ev="einstellungen">Erinnerung, Sichern, Einstellungen</summary>
+      <p class="label">Uhrzeiten für die Erinnerung</p>
+      <div class="uhren" id="uhren"></div>
+      <div class="knopfreihe" style="margin-top:12px">
+        <button class="knopf" type="button" id="x-kalender" data-ev="export_kalender">Erinnerung in den Kalender</button>
+      </div>
+      <p class="klein leise" style="margin:10px 0 16px">Erzeugt eine Kalenderdatei mit einem täglichen Termin je Uhrzeit, samt Hinweis. Öffne sie mit Apple, Google oder Outlook. Änderst du später Mittel oder Zeiten, lösch die alten Kapselzeit-Termine im Kalender und lade die Datei neu herunter.</p>
+      <div class="feld" style="max-width:260px">
+        <label for="frist">Nachkaufen anzeigen ab (Tage vorher)</label>
+        <input type="text" id="frist" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="knopfreihe" style="margin-top:16px">
+        <button class="knopf" type="button" id="x-sicherung" data-ev="export_sicherung">Sicherung speichern</button>
+        <button class="knopf" type="button" id="x-einspielen" data-ev="import_sicherung">Sicherung einspielen</button>
+        <input type="file" id="x-datei" accept=".json,application/json" hidden>
+        <button class="knopf gefahr" type="button" id="x-loeschen" data-ev="alles_loeschen">Alle Daten löschen</button>
+      </div>
+      <p class="klein leise" style="margin:10px 0 0">Alles liegt nur in diesem Browser auf diesem Gerät. Sicherung und Kalenderdatei entstehen in deinem Browser, nichts wird hochgeladen.</p>
+    </details>
+  </section>
+
+  <section class="karte" aria-labelledby="beta-titel">
+    <h2 id="beta-titel">Du testest Kapselzeit mit</h2>
+    <p>Kapselzeit ist eine <strong>Testfassung</strong>. Sie läuft im Browser, damit wir ohne Umweg über einen App-Store schnell verbessern können. In den Play Store und den App Store geht sie erst, wenn du und viele andere sie gern nutzen.</p>
+    <p>Wenn sie dir hilft: <strong>teile sie</strong>. Und sag uns, was fehlt oder stört. So bauen wir sie mit dir zusammen weiter.</p>
+    <div class="feld" style="gap:10px">
+      <button class="knopf" id="beta-teilen" type="button" data-ev="teilen_app">App teilen</button>
+      <label class="label" for="beta-text">Dein Feedback</label>
+      <textarea id="beta-text" rows="3" maxlength="1000" placeholder="Was fehlt dir, was stört, was gefällt?"></textarea>
+      <label class="label" for="beta-kontakt">Kontakt für Rückfragen (freiwillig)</label>
+      <input id="beta-kontakt" type="text" maxlength="200" autocomplete="off" placeholder="E-Mail oder leer lassen">
+      <button class="knopf" id="beta-senden" type="button">Feedback senden</button>
+      <p class="klein" id="beta-stand" role="status" aria-live="polite" hidden></p>
+      <p class="klein leise" style="margin:0">Dein Feedback geht an uns (klickmill.app), ohne IP-Adresse und ohne Kennung. Was du einnimmst, schicken wir nie mit. Mehr dazu im <a href="datenschutz.html">Datenschutz</a>.</p>
+    </div>
+  </section>
+
+  <section class="karte" aria-labelledby="ueber-titel">
+    <h2 id="ueber-titel">Was diese App nach außen schickt</h2>
+    <p>Deine Einträge bleiben in diesem Browser auf deinem Gerät. Nach außen gehen genau zwei Dinge, beide an klickmill.app: ein anonymer Zähler (App-Start und gedrückte Knöpfe, ohne Kennung, ohne Cookie) und dein Feedback, wenn du es oben abschickst. Sonst nichts: kein Konto, keine Werbung, keine fremden Skripte oder Schriften.</p>
+    <label for="zaehler-aus" style="display:flex;gap:10px;align-items:flex-start;margin-top:8px">
+      <input type="checkbox" id="zaehler-aus" style="width:22px;height:22px;margin-top:2px;flex:none">
+      <span>Zähler abschalten. Dann zählt dieses Gerät nicht mehr mit. Der Schalter bleibt nur hier gespeichert.</span>
+    </label>
+    <p class="leise" style="margin-top:10px">Version 1.1 vom 30.9.2026 · <a href="aenderungen.html">Was sich geändert hat</a></p>
+  </section>
+  <footer class="fuss">
+    <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a>
+  </footer>
+</main>
+
+<div class="hinweis" id="hinweis" role="status" aria-live="polite" hidden>
+  <span id="hinweis-text"></span>
+  <button type="button" id="hinweis-knopf" hidden>Rückgängig</button>
+</div>
+
+<script src="kapsel.js"></script>
+<script>
+(function () {
+  "use strict";
+  var K = window.Kapsel;
+  var SPEICHER = "kapselzeit";
+  var WOCHENTAG = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  var h = location.hostname;
+  var LOKAL = !h || h === "localhost" || h === "127.0.0.1";
+  var BASIS = "https://klickmill.app";
+  // Zähler-Schalter: liegt nur in diesem Browser, wird vor jedem Ping gelesen.
+  var ZAEHLER_AUS = "kapselzeit-zaehler-aus";
+  function zaehlerAus() {
+    try { return localStorage.getItem(ZAEHLER_AUS) === "1"; } catch (e) { return false; }
+  }
+  (function () {
+    var box = document.getElementById("zaehler-aus");
+    if (!box) return;
+    box.checked = zaehlerAus();
+    box.addEventListener("change", function () {
+      try { localStorage.setItem(ZAEHLER_AUS, box.checked ? "1" : "0"); } catch (e) {}
+    });
+  })();
+  function ping(ev) {
+    if (LOKAL || zaehlerAus()) return;
+    fetch(BASIS + "/api/ping?app=kapselzeit" + (ev ? "&ev=" + encodeURIComponent(ev) : "")).catch(function () {});
+  }
+  function heute() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function neueId() { return (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).slice(0, 20); }
+  function $(id) { return document.getElementById(id); }
+  function el(tag, klasse, text) { var e = document.createElement(tag); if (klasse) e.className = klasse; if (text != null) e.textContent = text; return e; }
+  function kurzDatum(t) { var d = new Date(t + "T12:00:00"); return WOCHENTAG[d.getDay()] + " " + d.getDate() + "." + (d.getMonth() + 1) + "."; }
+  function stueck(n) { return n === 1 ? "1 Stück" : n + " Stück"; }
+  function dosis(e) { return e.menge ? e.einheiten + " × " + e.menge : stueck(e.einheiten); }
+
+  function laden() {
+    var leer = { v: 1, liste: [], log: {}, uhr: Object.assign({}, K.UHR_STANDARD), frist: 7, willkommenWeg: false };
+    try {
+      var d = JSON.parse(localStorage.getItem(SPEICHER) || "null");
+      if (!d || !Array.isArray(d.liste)) return leer;
+      d.liste = d.liste.map(K.saeubern).filter(Boolean);
+      d.log = K.logAufraeumen(d.log, d.liste, heute());
+      var uhr = Object.assign({}, K.UHR_STANDARD);
+      Object.keys(uhr).forEach(function (z) { if (d.uhr && /^([01]\d|2[0-3]):[0-5]\d$/.test(d.uhr[z] || "")) uhr[z] = d.uhr[z]; });
+      d.uhr = uhr;
+      d.frist = Number.isInteger(d.frist) && d.frist >= 1 && d.frist <= 60 ? d.frist : 7;
+      d.willkommenWeg = d.willkommenWeg === true;
+      return d;
+    } catch (e) { return leer; }
+  }
+  var daten = laden();
+  function speichern() {
+    try { localStorage.setItem(SPEICHER, JSON.stringify(daten)); return true; }
+    catch (e) { zeigeHinweis("Speichern hat nicht geklappt. Ist der Speicher voll oder privat?"); return false; }
+  }
+
+  var hinweisZeit = null, rueckgaengig = null;
+  function zeigeHinweis(text, beiRueckgaengig) {
+    $("hinweis-text").textContent = text;
+    rueckgaengig = beiRueckgaengig || null;
+    $("hinweis-knopf").hidden = !rueckgaengig;
+    $("hinweis").hidden = false;
+    clearTimeout(hinweisZeit);
+    hinweisZeit = setTimeout(function () { $("hinweis").hidden = true; rueckgaengig = null; }, 6000);
+  }
+  $("hinweis-knopf").addEventListener("click", function () { if (rueckgaengig) rueckgaengig(); rueckgaengig = null; $("hinweis").hidden = true; });
+
+  // Formular
+  K.ZEITEN.forEach(function (z) {
+    var i = el("input"); i.type = "checkbox"; i.id = "z-" + z[0]; i.value = z[0];
+    var l = el("label", "", z[1]); l.htmlFor = i.id;
+    $("f-zeiten").appendChild(i); $("f-zeiten").appendChild(l);
+  });
+  var bearbeiteId = null;
+  function formularLeeren() {
+    bearbeiteId = null;
+    ["f-name", "f-menge", "f-einheiten", "f-vorrat", "f-packung", "f-notiz"].forEach(function (id) { $(id).value = ""; });
+    K.ZEITEN.forEach(function (z) { $("z-" + z[0]).checked = false; });
+    $("form-titel").textContent = "Neues Mittel";
+    $("f-abbrechen").hidden = true;
+    ["f-name-fehler", "f-zeiten-fehler", "f-zahl-fehler"].forEach(function (id) { $(id).hidden = true; });
+  }
+  function formularFuellen(e) {
+    bearbeiteId = e.id;
+    $("f-name").value = e.name; $("f-menge").value = e.menge; $("f-einheiten").value = String(e.einheiten);
+    $("f-vorrat").value = e.vorrat === null ? "" : String(K.vorrat(e, heute()).rest);
+    $("f-packung").value = e.packung === null ? "" : String(e.packung);
+    $("f-notiz").value = e.notiz;
+    K.ZEITEN.forEach(function (z) { $("z-" + z[0]).checked = e.zeiten.indexOf(z[0]) >= 0; });
+    $("form-titel").textContent = "Bearbeiten: " + e.name;
+    $("f-abbrechen").hidden = false;
+    $("form-karte").scrollIntoView({ behavior: "smooth", block: "start" });
+    $("f-name").focus({ preventScroll: true });
+  }
+  $("f-abbrechen").addEventListener("click", formularLeeren);
+  function zahl(id, min, max) {
+    var t = $(id).value.trim();
+    if (!t) return { leer: true, wert: null };
+    var n = /^\d+$/.test(t) ? parseInt(t, 10) : NaN;
+    return { leer: false, wert: n >= min && n <= max ? n : undefined };
+  }
+  $("formular").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    ["f-name-fehler", "f-zeiten-fehler", "f-zahl-fehler"].forEach(function (id) { $(id).hidden = true; });
+    var name = $("f-name").value.trim();
+    if (!name) { $("f-name-fehler").textContent = "Trag einen Namen ein."; $("f-name-fehler").hidden = false; $("f-name").focus(); return; }
+    var zeiten = K.ZEITEN.map(function (z) { return z[0]; }).filter(function (z) { return $("z-" + z).checked; });
+    if (!zeiten.length) { $("f-zeiten-fehler").textContent = "Wähl mindestens eine Zeit."; $("f-zeiten-fehler").hidden = false; $("z-morgens").focus(); return; }
+    var einh = zahl("f-einheiten", 1, 20), vor = zahl("f-vorrat", 0, 100000), pack = zahl("f-packung", 1, 100000);
+    if (einh.wert === undefined || vor.wert === undefined || pack.wert === undefined) {
+      $("f-zahl-fehler").textContent = "Stückzahlen bitte als ganze Zahl, zum Beispiel 1, 30 oder 60.";
+      $("f-zahl-fehler").hidden = false; return;
+    }
+    var alt = bearbeiteId ? daten.liste.find(function (x) { return x.id === bearbeiteId; }) : null;
+    var vorratNeu = vor.leer ? null : vor.wert;
+    var e = K.saeubern({
+      id: alt ? alt.id : neueId(), t: Date.now(), name: name, menge: $("f-menge").value, einheiten: einh.leer ? 1 : einh.wert,
+      zeiten: zeiten, vorrat: vorratNeu,
+      // Immer ab heute zählen: das Formular ist mit dem heutigen Rest vorbelegt. So wirkt ein
+      // geänderter Plan erst ab heute und nicht rückwirkend (Prüfer 29.9.).
+      vorratAm: vorratNeu === null ? "" : heute(),
+      packung: pack.leer ? null : pack.wert, pausiert: alt ? alt.pausiert : false, notiz: $("f-notiz").value
+    });
+    var vorher = daten.liste.slice();
+    daten.liste = alt ? daten.liste.map(function (x) { return x.id === e.id ? e : x; }) : daten.liste.concat([e]);
+    daten.willkommenWeg = true;
+    if (!speichern()) { daten.liste = vorher; return; }
+    ping(alt ? "mittel_bearbeitet" : "mittel_neu");
+    formularLeeren();
+    render(e.id);
+    zeigeHinweis(alt ? "Gespeichert." : e.name + " eingetragen.", function () { daten.liste = vorher; speichern(); render(); });
+  });
+
+  function aendern(e, neu, text, ev) {
+    var vorher = daten.liste.slice();
+    daten.liste = daten.liste.map(function (x) { return x.id === e.id ? neu : x; });
+    if (!speichern()) { daten.liste = vorher; return; }
+    if (ev) ping(ev);
+    render(e.id);
+    zeigeHinweis(text, function () { daten.liste = vorher; speichern(); render(); });
+  }
+
+  function render(markiertId) {
+    var tag = heute();
+    $("datum-heute").textContent = kurzDatum(tag);
+    $("willkommen").hidden = daten.willkommenWeg || daten.liste.length > 0;
+
+    // Heute
+    var box = $("heute"); box.textContent = "";
+    var gruppen = K.tagesliste(daten.liste);
+    var log = daten.log[tag] || {};
+    var gesamt = 0, erledigt = 0;
+    if (!gruppen.length) box.appendChild(el("p", "leise leer", daten.liste.length ? "Alle Mittel sind pausiert. Unten bei einem Mittel auf Fortsetzen tippen." : "Noch nichts geplant. Trag unten dein erstes Mittel mit Zeit ein."));
+    gruppen.forEach(function (g) {
+      box.appendChild(el("p", "zeit-kopf", g.name));
+      g.eintraege.forEach(function (e) {
+        var k = K.schluessel(e.id, g.zeit);
+        var an = log[k] === true;
+        gesamt++; if (an) erledigt++;
+        var lab = el("label", "abhaken" + (an ? " fertig" : ""));
+        var cb = el("input"); cb.type = "checkbox"; cb.checked = an;
+        cb.addEventListener("change", function () {
+          // Tab über Mitternacht offen: erst auf den neuen Tag umschalten, nichts auf gestern buchen.
+          if (heute() !== tag) { render(); return; }
+          daten.log[tag] = daten.log[tag] || {};
+          if (cb.checked) { daten.log[tag][k] = true; ping("abgehakt"); } else delete daten.log[tag][k];
+          speichern(); render();
+        });
+        var txt = el("span");
+        txt.appendChild(el("b", "", e.name));
+        txt.appendChild(el("small", "", dosis(e) + (e.notiz ? ", " + e.notiz : "")));
+        lab.appendChild(cb); lab.appendChild(txt);
+        box.appendChild(lab);
+      });
+    });
+    $("fortschritt").hidden = !gesamt;
+    $("fortschritt-zahl").textContent = erledigt + " von " + gesamt;
+    // Die Wochenbilanz erst zeigen, wenn es einen Vortag im Protokoll gibt.
+    // Am ersten Tag stünde sonst "an 0 Tagen alles", das liest sich wie ein Vorwurf.
+    var hatVortag = Object.keys(daten.log).some(function (d) { return d < tag; });
+    if (hatVortag) {
+      var q = K.quote(daten.liste, daten.log, tag, 7);
+      $("quote").textContent = "Letzte 7 Tage: an " + q.voll + (q.voll === 1 ? " Tag" : " Tagen") + " alles";
+    } else {
+      $("quote").textContent = gesamt ? "Hak heute ab, dann siehst du ab morgen deine Wochenbilanz." : "";
+    }
+
+    // Nachkaufen
+    var vb = $("vorrat"); vb.textContent = "";
+    var knapp = K.nachkaufen(daten.liste, tag, daten.frist);
+    $("einkauf-reihe").hidden = !knapp.length;
+    var mitVorrat = daten.liste.filter(function (e) { return e.vorrat !== null; }).length;
+    if (!knapp.length) vb.appendChild(el("p", "leise leer", mitVorrat ? "Alles reicht noch länger als " + daten.frist + " Tage." : "Trag beim Mittel den Vorrat ein, dann siehst du hier, wann es leer wird."));
+    knapp.forEach(function (x) {
+      var z = el("div", "zeile-k");
+      var w = el("div", "was");
+      w.appendChild(el("b", "", x.e.name));
+      var leer = x.v.tage === 0;
+      w.appendChild(el("small", leer ? "rot" : "warn", leer ? "Reicht heute nicht mehr, noch " + stueck(x.v.rest) : "Reicht noch " + (x.v.tage === 1 ? "1 Tag" : x.v.tage + " Tage") + ", bis " + kurzDatum(x.v.letzterTag)));
+      z.appendChild(w);
+      if (x.e.packung) {
+        var b = el("button", "knopf k", "+ Packung (" + x.e.packung + ")"); b.type = "button";
+        b.addEventListener("click", function () { if (heute() !== tag) { render(); return; } aendern(x.e, K.nachfuellen(x.e, tag, x.e.packung), x.e.name + ": neue Packung eingetragen.", "neue_packung"); });
+        z.appendChild(b);
+      } else {
+        var b2 = el("button", "knopf k", "Vorrat zählen"); b2.type = "button";
+        b2.addEventListener("click", function () { formularFuellen(x.e); $("f-vorrat").focus(); });
+        z.appendChild(b2);
+      }
+      vb.appendChild(z);
+    });
+
+    // Liste
+    var lb = $("liste"); lb.textContent = "";
+    if (!daten.liste.length) lb.appendChild(el("p", "leise leer", "Noch keine Mittel eingetragen."));
+    daten.liste.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); }).forEach(function (e) {
+      var k = el("article", "mittel" + (e.id === markiertId ? " markiert" : ""));
+      var kopf = el("h3", "", e.name + (e.pausiert ? " (pausiert)" : ""));
+      k.appendChild(kopf);
+      k.appendChild(el("p", "zeile", dosis(e) + ", " + e.zeiten.map(function (z) { return K.ZEIT_NAME[z]; }).join(", ")));
+      var v = K.vorrat(e, tag);
+      if (v) k.appendChild(el("p", "zeile" + (v.tage !== null && v.tage <= daten.frist ? " warn" : ""), "Vorrat " + stueck(v.rest) + (v.tage === null ? "" : v.tage === 0 ? ", reicht heute nicht mehr" : ", reicht bis " + kurzDatum(v.letzterTag))));
+      if (e.notiz) k.appendChild(el("p", "zeile", e.notiz));
+      var reihe = el("div", "knopfreihe");
+      var b = el("button", "knopf k", "Bearbeiten"); b.type = "button";
+      b.setAttribute("aria-label", "Bearbeiten: " + e.name);
+      b.addEventListener("click", function () { formularFuellen(e); });
+      var p = el("button", "knopf k", e.pausiert ? "Fortsetzen" : "Pausieren"); p.type = "button";
+      p.setAttribute("aria-label", (e.pausiert ? "Fortsetzen: " : "Pausieren: ") + e.name);
+      p.addEventListener("click", function () {
+        if (heute() !== tag) { render(); return; }
+        // Beim Pausieren den Vorrat einfrieren: heutiger Rest wird neu gezählt.
+        var basis = e.vorrat !== null ? Object.assign({}, e, { vorrat: K.vorrat(e, tag).rest, vorratAm: tag }) : e;
+        aendern(e, Object.assign({}, basis, { pausiert: !e.pausiert, t: Date.now() }), e.name + (e.pausiert ? " läuft wieder." : " pausiert."), "pausieren");
+      });
+      var x = el("button", "knopf k gefahr", "Löschen"); x.type = "button";
+      x.setAttribute("aria-label", "Löschen: " + e.name);
+      x.addEventListener("click", function () {
+        var vorher = daten.liste.slice();
+        daten.liste = daten.liste.filter(function (y) { return y.id !== e.id; });
+        if (!speichern()) { daten.liste = vorher; return; }
+        if (bearbeiteId === e.id) formularLeeren();
+        render();
+        zeigeHinweis(e.name + " gelöscht.", function () { daten.liste = vorher; speichern(); render(); });
+      });
+      reihe.appendChild(b); reihe.appendChild(p); reihe.appendChild(x);
+      k.appendChild(reihe);
+      lb.appendChild(k);
+    });
+
+    // Einstellungen
+    $("frist").value = String(daten.frist);
+  }
+
+  // Uhrzeiten
+  K.ZEITEN.forEach(function (z) {
+    var f = el("div", "feld");
+    var l = el("label", "", z[1]); l.htmlFor = "u-" + z[0];
+    var i = el("input"); i.type = "time"; i.id = "u-" + z[0]; i.value = daten.uhr[z[0]];
+    i.addEventListener("change", function () {
+      if (/^([01]\d|2[0-3]):[0-5]\d$/.test(i.value)) { daten.uhr[z[0]] = i.value; speichern(); }
+      else i.value = daten.uhr[z[0]];
+    });
+    f.appendChild(l); f.appendChild(i); $("uhren").appendChild(f);
+  });
+  $("frist").addEventListener("change", function () {
+    var n = parseInt($("frist").value, 10);
+    if (n >= 1 && n <= 60) { daten.frist = n; speichern(); render(); } else $("frist").value = String(daten.frist);
+  });
+
+  function herunterladen(inhalt, name, typ) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([inhalt], { type: typ }));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  $("x-kalender").addEventListener("click", function () {
+    if (!K.tagesliste(daten.liste).length) { zeigeHinweis("Noch nichts geplant, was in den Kalender könnte."); return; }
+    herunterladen(K.kalender(daten.liste, daten.uhr, new Date(), heute()), "kapselzeit-erinnerung.ics", "text/calendar;charset=utf-8");
+  });
+  $("x-sicherung").addEventListener("click", function () {
+    if (!daten.liste.length) { zeigeHinweis("Noch nichts gespeichert."); return; }
+    herunterladen(K.sicherung(daten.liste, daten.log), "kapselzeit-sicherung-" + heute() + ".json", "application/json");
+  });
+  $("x-einspielen").addEventListener("click", function () { $("x-datei").click(); });
+  $("x-datei").addEventListener("change", function () {
+    var datei = this.files && this.files[0]; this.value = "";
+    if (!datei) return;
+    if (datei.size > 5 * 1024 * 1024) { zeigeHinweis("Die Datei ist zu groß für eine Kapselzeit-Sicherung."); return; }
+    var leser = new FileReader();
+    leser.onload = function () {
+      var s = K.sicherungLesen(leser.result);
+      if (!s) { zeigeHinweis("Das ist keine Kapselzeit-Sicherung. Nimm die Datei von „Sicherung speichern“."); return; }
+      var alt = { liste: daten.liste, log: daten.log };
+      var m = K.zusammenfuehren(daten.liste, s.liste, daten.log, s.log);
+      daten.liste = m.liste; daten.log = K.logAufraeumen(m.log, m.liste, heute());
+      if (!speichern()) { daten.liste = alt.liste; daten.log = alt.log; return; }
+      render();
+      var t = m.dazu === 0 ? "Nichts Neues" : m.dazu === 1 ? "1 Mittel dazu" : m.dazu + " Mittel dazu";
+      if (m.aktualisiert) t += ", " + m.aktualisiert + " aktualisiert";
+      if (s.kaputt) t += ", " + s.kaputt + " unlesbar";
+      zeigeHinweis(t + ".");
+    };
+    leser.onerror = function () { zeigeHinweis("Die Datei ließ sich nicht lesen."); };
+    leser.readAsText(datei, "utf-8");
+  });
+  $("x-loeschen").addEventListener("click", function () {
+    if (!daten.liste.length) { zeigeHinweis("Es ist nichts gespeichert."); return; }
+    if (!confirm("Alle Mittel, Häkchen und Einstellungen auf diesem Gerät löschen? Das lässt sich nicht rückgängig machen.")) return;
+    try { localStorage.removeItem(SPEICHER); } catch (e) {}
+    daten = laden(); formularLeeren(); render(); zeigeHinweis("Alles gelöscht.");
+  });
+  $("einkauf-teilen").addEventListener("click", function () {
+    var text = "Nachkaufen:\n" + K.einkaufText(K.nachkaufen(daten.liste, heute(), daten.frist));
+    if (navigator.share) navigator.share({ title: "Einkaufsliste", text: text }).catch(function () {});
+    else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { zeigeHinweis("Einkaufsliste kopiert."); }, function () { zeigeHinweis("Kopieren hat nicht geklappt."); });
+  });
+  $("wk-los").addEventListener("click", function () { daten.willkommenWeg = true; speichern(); render(); $("f-name").focus(); });
+
+  ping();
+  document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest("[data-ev]") : null;
+    if (!t) return;
+    if (t.tagName === "SUMMARY" && t.parentElement.open) return;
+    ping(t.getAttribute("data-ev"));
+  });
+
+  function melde(text) { var s = $("beta-stand"); s.textContent = text; s.hidden = false; }
+  $("beta-teilen").addEventListener("click", function () {
+    var link = "https://klickmill.app/go/kapselzeit?s=teilen";
+    var text = "Mit Kapselzeit hake ich meine Vitamine ab und sehe, wann eine Packung leer wird. Läuft im Browser, ohne Konto.";
+    if (navigator.share) navigator.share({ title: "Kapselzeit", text: text, url: link }).catch(function () {});
+    else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(function () { melde("Link kopiert: " + link); }, function () { melde("Link zum Weitergeben: " + link); });
+    else melde("Link zum Weitergeben: " + link);
+  });
+  $("beta-senden").addEventListener("click", function () {
+    var feld = $("beta-text"), kontakt = $("beta-kontakt"), knopf = $("beta-senden");
+    var text = (feld.value || "").trim();
+    if (text.length < 3) { melde("Schreib bitte ein, zwei Sätze, dann können wir etwas damit anfangen."); feld.focus(); return; }
+    if (LOKAL) { melde("Lokale Kopie: Feedback wird nicht gesendet."); return; }
+    knopf.disabled = true;
+    fetch(BASIS + "/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ app: "kapselzeit", text: text.slice(0, 1000), kontakt: (kontakt.value || "").trim().slice(0, 200) })
+    }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); feld.value = ""; kontakt.value = ""; melde("Danke, dein Feedback ist angekommen."); })
+      .catch(function () { melde("Senden hat nicht geklappt. Versuch es später noch einmal."); })
+      .then(function () { knopf.disabled = false; });
+  });
+
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || LOKAL)) navigator.serviceWorker.register("sw.js").catch(function () {});
+  // Beim Zurückkehren in den Tab neu zeichnen, damit nach Mitternacht der neue Tag gilt.
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) render(); });
+  speichern();
+  render();
+})();
+</script>
+</body>
+</html>
