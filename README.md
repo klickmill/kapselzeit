@@ -20,6 +20,9 @@ Die Einträge bleiben im Browser auf dem eigenen Gerät (localStorage). Nach au�
 
 Alle Dateien in einen Ordner auf einen Webserver legen, fertig. Der Zähler ruft nur dann klickmill.app, wenn die Seite von dort geladen wurde; lokal geöffnete Kopien zählen nicht.
 
-## Lizenz
+## Quellcode und Lizenz
+
+https://github.com/klickmill/kapselzeit
+
 
 MIT, siehe `LICENSE`. Impressum und Datenschutz gelten für den Betrieb unter klickmill.app.
