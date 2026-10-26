@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kapselzeit">
-<title>Kapselzeit</title>
+<title>Kapselzeit: Vitamine abhaken, Vorrat im Blick</title>
 <style>
   /* Kühles Grau mit Kobaltblau als einzigem Akzent. Rot heißt: reicht nicht mehr,
      Bernstein: bald nachkaufen. Kontraste gerechnet, alle Textfarben über 4,5 zu 1. */
@@ -42,6 +42,7 @@
   .seite { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 16px; }
   .kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 4px 0; }
   .marke { margin: 0; font-size: 1.25rem; font-weight: 750; letter-spacing: -0.01em; }
+  .unterzeile { margin: 2px 0 0; font-size: 0.85rem; color: var(--leise); }
   .karte { background: var(--card); border: 1px solid var(--rand); border-radius: var(--r-karte); box-shadow: var(--schatten); padding: 18px; }
   h2 { margin: 0 0 12px; font-size: 1.05rem; font-weight: 700; }
   h3 { margin: 0; font-size: 1rem; font-weight: 700; }
@@ -74,6 +75,7 @@
   .feld { display: grid; gap: 6px; }
   .feld label, .label { font-size: 0.9rem; font-weight: 600; }
   .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .zwei .feld { align-content: end; } /* Felder bleiben auf einer Linie, auch wenn ein Label umbricht */
   input[type="text"], input[type="time"], textarea {
     width: 100%; min-height: 48px; padding: 10px 14px; border: 1px solid var(--rand); border-radius: var(--r-feld);
     background: var(--card); color: var(--text); font: inherit; }
@@ -123,15 +125,20 @@
 <main class="seite">
 
   <header class="kopf">
-    <h1 class="marke">Kapselzeit</h1>
+    <div>
+      <h1 class="marke">Kapselzeit</h1>
+      <p class="unterzeile">Vitamine abhaken, Vorrat im Blick</p>
+    </div>
     <span class="leise klein" id="datum-heute"></span>
   </header>
 
   <section class="karte" id="willkommen" aria-labelledby="wk-titel" hidden style="border-color: var(--akzent)">
-    <h2 id="wk-titel">Abhaken und nie wieder leer</h2>
-    <p>Trag deine Vitamine und Nahrungsergänzung mit Zeit und Vorrat ein. Kapselzeit zeigt dir, was heute noch fehlt, und sagt rechtzeitig, wann eine Packung leer wird.</p>
+    <h2 id="wk-titel">Vitamine abhaken, rechtzeitig nachkaufen</h2>
+    <p><strong>Das Problem:</strong> Du vergisst deine Vitamine oder andere Nahrungsergänzung. Oder du merkst erst zu spät, dass die Packung leer ist.</p>
+    <p><strong>Die Lösung:</strong> Du trägst ein, was du nimmst und wann, und hakst jeden Tag ab. Trägst du auch ein, wie viele du noch hast, siehst du rechtzeitig, wann eine Packung leer wird.</p>
+    <p><strong>Zuerst:</strong> Tipp auf „Jetzt eintragen“.</p>
     <p class="flaeche">Kapselzeit merkt sich nur, was du selbst einträgst. Es gibt keine Empfehlungen zu Dosis, Kombination oder Wirkung. Halte dich an die Packungsbeilage oder an die Absprache mit deiner Ärztin oder deinem Arzt.</p>
-    <button class="knopf haupt" type="button" id="wk-los" data-ev="start" style="margin-top:12px">Erstes Mittel eintragen</button>
+    <button class="knopf haupt" type="button" id="wk-los" data-ev="start" style="margin-top:12px">Jetzt eintragen</button>
   </section>
 
   <section class="karte" aria-labelledby="heute-titel">
@@ -152,23 +159,24 @@
   </section>
 
   <section class="karte" aria-labelledby="form-titel" id="form-karte">
-    <h2 id="form-titel">Neues Mittel</h2>
+    <h2 id="form-titel">Neu eintragen</h2>
     <form id="formular" novalidate>
       <div class="feld">
         <label for="f-name">Name</label>
-        <input type="text" id="f-name" maxlength="60" autocomplete="off" placeholder="zum Beispiel Vitamin D">
+        <input type="text" id="f-name" maxlength="60" autocomplete="off" placeholder="z. B. Vitamin D">
       </div>
       <p class="fehler" id="f-name-fehler" role="alert" hidden></p>
       <div class="zwei">
         <div class="feld">
           <label for="f-menge">Form</label>
-          <input type="text" id="f-menge" maxlength="40" autocomplete="off" placeholder="Kapsel, Tablette, Tropfen">
+          <input type="text" id="f-menge" maxlength="40" autocomplete="off" placeholder="z. B. Kapsel">
         </div>
         <div class="feld">
-          <label for="f-einheiten">Stück je Einnahme</label>
-          <input type="text" id="f-einheiten" inputmode="numeric" autocomplete="off" placeholder="1">
+          <label for="f-einheiten">Wie viele auf einmal?</label>
+          <input type="text" id="f-einheiten" inputmode="numeric" autocomplete="off" placeholder="z. B. 1">
         </div>
       </div>
+      <p class="klein leise" style="margin:-4px 0 0">„Form“ ist das, was du zählst, zum Beispiel Kapsel, Tablette oder Tropfen. „Wie viele auf einmal?“ meint, wie viele davon du bei einer Einnahme nimmst.</p>
       <fieldset style="border:0;padding:0;margin:0">
         <legend class="label" style="margin-bottom:6px">Wann nimmst du es?</legend>
         <div class="zeiten" id="f-zeiten"></div>
@@ -176,18 +184,19 @@
       <p class="fehler" id="f-zeiten-fehler" role="alert" hidden></p>
       <div class="zwei">
         <div class="feld">
-          <label for="f-vorrat">Vorrat jetzt (Stück)</label>
-          <input type="text" id="f-vorrat" inputmode="numeric" autocomplete="off" placeholder="freiwillig">
+          <label for="f-vorrat">Wie viele hast du noch?</label>
+          <input type="text" id="f-vorrat" inputmode="numeric" autocomplete="off" placeholder="z. B. 60">
         </div>
         <div class="feld">
-          <label for="f-packung">Stück je Packung</label>
-          <input type="text" id="f-packung" inputmode="numeric" autocomplete="off" placeholder="freiwillig">
+          <label for="f-packung">Wie viele in einer Packung?</label>
+          <input type="text" id="f-packung" inputmode="numeric" autocomplete="off" placeholder="z. B. 90">
         </div>
       </div>
+      <p class="klein leise" style="margin:-4px 0 0">Beide Zahlen sind freiwillig. Mit „Wie viele hast du noch?“ rechnet Kapselzeit aus, wann es leer wird, und zeigt es in deiner Liste. Wird es knapp, steht es auch unter „Bald nachkaufen“. Die Zahl je Packung braucht dort der Knopf „+ Packung“, wenn du nachkaufst.</p>
       <p class="fehler" id="f-zahl-fehler" role="alert" hidden></p>
       <div class="feld">
         <label for="f-notiz">Notiz</label>
-        <textarea id="f-notiz" maxlength="300" rows="2" placeholder="zum Beispiel mit dem Frühstück"></textarea>
+        <textarea id="f-notiz" maxlength="300" rows="2" placeholder="z. B. mit dem Frühstück"></textarea>
       </div>
       <div class="knopfreihe">
         <button class="knopf haupt" type="submit" id="f-speichern">Speichern</button>
@@ -197,23 +206,25 @@
   </section>
 
   <section class="karte" aria-labelledby="liste-titel">
-    <h2 id="liste-titel">Deine Mittel</h2>
+    <h2 id="liste-titel">Deine Liste</h2>
     <div id="liste"></div>
-    <p class="klein leise" style="margin:14px 0 0">Kapselzeit merkt sich nur, was du einträgst, und gibt keine Empfehlungen zu Dosis, Kombination oder Wirkung. Halte dich an die Packungsbeilage oder an die Absprache mit deiner Ärztin oder deinem Arzt.</p>
+    <p class="klein leise" style="margin:14px 0 0">Kapselzeit merkt sich nur, was du einträgst. Es gibt keine Empfehlungen zu Dosis, Kombination oder Wirkung. Halte dich an die Packungsbeilage oder an die Absprache mit deiner Ärztin oder deinem Arzt.</p>
   </section>
 
   <section class="karte">
     <details id="einstellungen">
-      <summary data-ev="einstellungen">Erinnerung, Sichern, Einstellungen</summary>
+      <summary data-ev="einstellungen">Erinnerung, Nachkaufen, Sichern</summary>
       <p class="label">Uhrzeiten für die Erinnerung</p>
       <div class="uhren" id="uhren"></div>
       <div class="knopfreihe" style="margin-top:12px">
         <button class="knopf" type="button" id="x-kalender" data-ev="export_kalender">Erinnerung in den Kalender</button>
       </div>
-      <p class="klein leise" style="margin:10px 0 16px">Erzeugt eine Kalenderdatei mit einem täglichen Termin je Uhrzeit, samt Hinweis. Öffne sie mit Apple, Google oder Outlook. Änderst du später Mittel oder Zeiten, lösch die alten Kapselzeit-Termine im Kalender und lade die Datei neu herunter.</p>
+      <p class="klein leise" style="margin:10px 0 0">Der Knopf speichert eine Kalenderdatei. Öffnest du sie, steht in deinem Kalender jeden Tag ein Termin für jede Tageszeit, an der du etwas nimmst. Das klappt zum Beispiel mit Apple, Google oder Outlook. Der Termin hat eine Erinnerung eingebaut. Ob dein Kalender sie übernimmt, siehst du beim ersten Termin. Wenn nicht, stell sie dort selbst ein.</p>
+      <p class="klein leise" style="margin:8px 0 16px">Änderst du später, was du nimmst oder wann, lösch die alten Kapselzeit-Termine im Kalender. Dann speicher die Datei neu und öffne sie wieder.</p>
       <div class="feld" style="max-width:260px">
-        <label for="frist">Nachkaufen anzeigen ab (Tage vorher)</label>
-        <input type="text" id="frist" inputmode="numeric" autocomplete="off">
+        <label for="frist">Wie viele Tage vorher warnen?</label>
+        <input type="text" id="frist" inputmode="numeric" autocomplete="off" aria-describedby="frist-hilfe">
+        <p class="klein leise" id="frist-hilfe" style="margin:0">So viele Tage, bevor etwas leer wird, steht es unter „Bald nachkaufen“.</p>
       </div>
       <div class="knopfreihe" style="margin-top:16px">
         <button class="knopf" type="button" id="x-sicherung" data-ev="export_sicherung">Sicherung speichern</button>
@@ -221,14 +232,15 @@
         <input type="file" id="x-datei" accept=".json,application/json" hidden>
         <button class="knopf gefahr" type="button" id="x-loeschen" data-ev="alles_loeschen">Alle Daten löschen</button>
       </div>
-      <p class="klein leise" style="margin:10px 0 0">Alles liegt nur in diesem Browser auf diesem Gerät. Sicherung und Kalenderdatei entstehen in deinem Browser, nichts wird hochgeladen.</p>
+      <p class="klein leise" style="margin:10px 0 0">Alles liegt nur in diesem Browser auf diesem Gerät. Löschst du die Daten des Browsers, ist es weg. Sichere es deshalb ab und zu mit „Sicherung speichern“. Das lädt eine Datei herunter. Mit „Sicherung einspielen“ holst du deine Einträge und Häkchen aus dieser Datei zurück, auch auf ein neues Gerät. Uhrzeiten und Einstellungen stellst du dort neu ein. Was schon da ist, kommt nicht doppelt.</p>
+      <p class="klein leise" style="margin:8px 0 0">Sicherung und Kalenderdatei entstehen in deinem Browser. Nichts davon wird hochgeladen.</p>
     </details>
   </section>
 
   <section class="karte" aria-labelledby="beta-titel">
-    <h2 id="beta-titel">Du testest Kapselzeit mit</h2>
-    <p>Kapselzeit ist eine <strong>Testfassung</strong>. Sie läuft im Browser, damit wir ohne Umweg über einen App-Store schnell verbessern können. In den Play Store und den App Store geht sie erst, wenn du und viele andere sie gern nutzen.</p>
-    <p>Wenn sie dir hilft: <strong>teile sie</strong>. Und sag uns, was fehlt oder stört. So bauen wir sie mit dir zusammen weiter.</p>
+    <h2 id="beta-titel">Das ist eine Testfassung</h2>
+    <p>Kapselzeit ist noch eine <strong>Testfassung</strong>. Du nutzt sie im Browser, ohne App-Store und ohne Konto. In die App-Stores kommt sie erst, wenn viele sie gern nutzen.</p>
+    <p>Hilft sie dir? Dann teile sie gern. Und sag uns, was fehlt oder stört.</p>
     <div class="feld" style="gap:10px">
       <button class="knopf" id="beta-teilen" type="button" data-ev="teilen_app">App teilen</button>
       <label class="label" for="beta-text">Dein Feedback</label>
@@ -237,18 +249,21 @@
       <input id="beta-kontakt" type="text" maxlength="200" autocomplete="off" placeholder="E-Mail oder leer lassen">
       <button class="knopf" id="beta-senden" type="button">Feedback senden</button>
       <p class="klein" id="beta-stand" role="status" aria-live="polite" hidden></p>
-      <p class="klein leise" style="margin:0">Dein Feedback geht an uns (klickmill.app), ohne IP-Adresse und ohne Kennung. Was du einnimmst, schicken wir nie mit. Mehr dazu im <a href="datenschutz.html">Datenschutz</a>.</p>
+      <p class="klein leise" style="margin:0">Dein Feedback geht an uns, die Macher von Kapselzeit (klickmill.app). Wir speichern dabei weder deine IP-Adresse, also die Internet-Anschrift deines Geräts, noch eine andere Kennung. Deine E-Mail sehen wir nur, wenn du sie selbst einträgst. Was du einnimmst, schicken wir nie mit. Mehr dazu im <a href="datenschutz.html">Datenschutz</a>.</p>
     </div>
   </section>
 
   <section class="karte" aria-labelledby="ueber-titel">
     <h2 id="ueber-titel">Was diese App nach außen schickt</h2>
-    <p>Deine Einträge bleiben in diesem Browser auf deinem Gerät. Nach außen gehen genau zwei Dinge, beide an klickmill.app: ein anonymer Zähler (App-Start und gedrückte Knöpfe, ohne Kennung, ohne Cookie) und dein Feedback, wenn du es oben abschickst. Sonst nichts: kein Konto, keine Werbung, keine fremden Skripte oder Schriften.</p>
+    <p>Deine Einträge bleiben in diesem Browser auf deinem Gerät. Nur zwei Dinge gehen an uns (klickmill.app):</p>
+    <p><strong>Ein Nutzungszähler.</strong> Er meldet, dass die App geöffnet wurde und welche der wichtigsten Knöpfe gedrückt wurden. Er weiß nicht, wer du bist, und setzt kein Cookie, also keine kleine Datei zum Wiedererkennen.</p>
+    <p><strong>Dein Feedback</strong>, aber nur, wenn du es selbst abschickst.</p>
+    <p>Sonst nichts. Es gibt kein Konto und keine Werbung. Die App lädt auch nichts von anderen Firmen nach, keine Programme und keine Schriftarten.</p>
     <label for="zaehler-aus" style="display:flex;gap:10px;align-items:flex-start;margin-top:8px">
       <input type="checkbox" id="zaehler-aus" style="width:22px;height:22px;margin-top:2px;flex:none">
-      <span>Zähler abschalten. Dann zählt dieses Gerät nicht mehr mit. Der Schalter bleibt nur hier gespeichert.</span>
+      <span>Zähler abschalten. Dann meldet dieser Browser keine App-Starts und Knöpfe mehr.</span>
     </label>
-    <p class="leise" style="margin-top:10px">Version 1.3 vom 22.10.2026 · <a href="aenderungen.html">Was sich geändert hat</a> · <a href="https://github.com/klickmill/kapselzeit" target="_blank" rel="noopener noreferrer">Quellcode</a></p>
+    <p class="leise" style="margin-top:10px">Version 1.4 vom 26.10.2026 · <a href="aenderungen.html">Was sich geändert hat</a> · <a href="https://github.com/klickmill/kapselzeit" target="_blank" rel="noopener noreferrer">Quellcode (für Entwickler)</a></p>
   </section>
   <footer class="fuss">
     <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a>
@@ -341,7 +356,7 @@
     bearbeiteId = null;
     ["f-name", "f-menge", "f-einheiten", "f-vorrat", "f-packung", "f-notiz"].forEach(function (id) { $(id).value = ""; });
     K.ZEITEN.forEach(function (z) { $("z-" + z[0]).checked = false; });
-    $("form-titel").textContent = "Neues Mittel";
+    $("form-titel").textContent = "Neu eintragen";
     $("f-abbrechen").hidden = true;
     ["f-name-fehler", "f-zeiten-fehler", "f-zahl-fehler"].forEach(function (id) { $(id).hidden = true; });
   }
@@ -415,7 +430,7 @@
     var gruppen = K.tagesliste(daten.liste);
     var log = daten.log[tag] || {};
     var gesamt = 0, erledigt = 0;
-    if (!gruppen.length) box.appendChild(el("p", "leise leer", daten.liste.length ? "Alle Mittel sind pausiert. Unten bei einem Mittel auf Fortsetzen tippen." : "Noch nichts geplant. Trag unten dein erstes Mittel mit Zeit ein."));
+    if (!gruppen.length) box.appendChild(el("p", "leise leer", daten.liste.length ? "Alles ist pausiert. Tipp unten in deiner Liste auf „Fortsetzen“." : "Noch nichts geplant. Trag unten ein, was du nimmst und wann."));
     gruppen.forEach(function (g) {
       box.appendChild(el("p", "zeit-kopf", g.name));
       g.eintraege.forEach(function (e) {
@@ -455,7 +470,7 @@
     var knapp = K.nachkaufen(daten.liste, tag, daten.frist);
     $("einkauf-reihe").hidden = !knapp.length;
     var mitVorrat = daten.liste.filter(function (e) { return e.vorrat !== null; }).length;
-    if (!knapp.length) vb.appendChild(el("p", "leise leer", mitVorrat ? "Alles reicht noch länger als " + daten.frist + " Tage." : "Trag beim Mittel den Vorrat ein, dann siehst du hier, wann es leer wird."));
+    if (!knapp.length) vb.appendChild(el("p", "leise leer", mitVorrat ? "Alles reicht noch länger als " + daten.frist + " Tage." : "Trag bei einem Eintrag ein, wie viele du noch hast. Dann siehst du hier, wann es leer wird."));
     knapp.forEach(function (x) {
       var z = el("div", "zeile-k");
       var w = el("div", "was");
@@ -477,7 +492,7 @@
 
     // Liste
     var lb = $("liste"); lb.textContent = "";
-    if (!daten.liste.length) lb.appendChild(el("p", "leise leer", "Noch keine Mittel eingetragen."));
+    if (!daten.liste.length) lb.appendChild(el("p", "leise leer", "Noch nichts eingetragen."));
     daten.liste.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); }).forEach(function (e) {
       var k = el("article", "mittel" + (e.id === markiertId ? " markiert" : ""));
       var kopf = el("h3", "", e.name + (e.pausiert ? " (pausiert)" : ""));
@@ -561,7 +576,7 @@
       daten.liste = m.liste; daten.log = K.logAufraeumen(m.log, m.liste, heute());
       if (!speichern()) { daten.liste = alt.liste; daten.log = alt.log; return; }
       render();
-      var t = m.dazu === 0 ? "Nichts Neues" : m.dazu === 1 ? "1 Mittel dazu" : m.dazu + " Mittel dazu";
+      var t = m.dazu === 0 ? "Nichts Neues" : m.dazu === 1 ? "1 Eintrag dazu" : m.dazu + " Einträge dazu";
       if (m.aktualisiert) t += ", " + m.aktualisiert + " aktualisiert";
       if (s.kaputt) t += ", " + s.kaputt + " unlesbar";
       zeigeHinweis(t + ".");
@@ -571,7 +586,7 @@
   });
   $("x-loeschen").addEventListener("click", function () {
     if (!daten.liste.length) { zeigeHinweis("Es ist nichts gespeichert."); return; }
-    if (!confirm("Alle Mittel, Häkchen und Einstellungen auf diesem Gerät löschen? Das lässt sich nicht rückgängig machen.")) return;
+    if (!confirm("Alle Einträge, Häkchen und Einstellungen auf diesem Gerät löschen? Das lässt sich nicht rückgängig machen.")) return;
     try { localStorage.removeItem(SPEICHER); } catch (e) {}
     try { localStorage.removeItem(ZAEHLER_AUS); } catch (e) {}
     var zb = document.getElementById("zaehler-aus"); if (zb) zb.checked = false;
