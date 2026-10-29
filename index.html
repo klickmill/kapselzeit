@@ -40,6 +40,13 @@
   body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--schrift); font-variant-numeric: tabular-nums;
     padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
   .seite { max-width: 560px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 16px; }
+  /* Solange nichts eingetragen ist, kommt das Formular direkt nach dem Willkommen, vor die leeren Karten. */
+  .seite.erststart > .kopf, .seite.erststart > #willkommen { order: -2; }
+  /* Erster Bildschirm nach dem Muster von Klartext: Alltagsfrage groß, ein Hauptknopf in voller Breite, mehr Luft. */
+  .frage { margin: 0 0 14px; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+  .einstieg p { line-height: 1.55; margin-bottom: 12px; }
+  .knopf.breit { display: block; width: 100%; min-height: 52px; }
+  .seite.erststart > #form-karte, .seite.erststart > #liste-karte { order: -1; }
   .kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 4px 0; }
   .marke { margin: 0; font-size: 1.25rem; font-weight: 750; letter-spacing: -0.01em; }
   .unterzeile { margin: 2px 0 0; font-size: 0.85rem; color: var(--leise); }
@@ -132,13 +139,13 @@
     <span class="leise klein" id="datum-heute"></span>
   </header>
 
-  <section class="karte" id="willkommen" aria-labelledby="wk-titel" hidden style="border-color: var(--akzent)">
-    <h2 id="wk-titel">Vitamine abhaken, rechtzeitig nachkaufen</h2>
+  <section class="karte einstieg" id="willkommen" aria-labelledby="wk-titel" hidden style="border-color: var(--akzent)">
+    <h2 class="frage" id="wk-titel">Vitamine vergessen?</h2>
     <p><strong>Das Problem:</strong> Du vergisst deine Vitamine oder andere Nahrungsergänzung. Oder du merkst erst zu spät, dass die Packung leer ist.</p>
     <p><strong>Die Lösung:</strong> Du trägst ein, was du nimmst und wann, und hakst jeden Tag ab. Trägst du auch ein, wie viele du noch hast, siehst du rechtzeitig, wann eine Packung leer wird.</p>
     <p><strong>Zuerst:</strong> Tipp auf „Jetzt eintragen“.</p>
     <p class="flaeche">Kapselzeit merkt sich nur, was du selbst einträgst. Es gibt keine Empfehlungen zu Dosis, Kombination oder Wirkung. Halte dich an die Packungsbeilage oder an die Absprache mit deiner Ärztin oder deinem Arzt.</p>
-    <button class="knopf haupt" type="button" id="wk-los" data-ev="start" style="margin-top:12px">Jetzt eintragen</button>
+    <button class="knopf haupt breit" type="button" id="wk-los" data-ev="start" style="margin-top:12px">Jetzt eintragen</button>
   </section>
 
   <section class="karte" aria-labelledby="heute-titel">
@@ -168,15 +175,15 @@
       <p class="fehler" id="f-name-fehler" role="alert" hidden></p>
       <div class="zwei">
         <div class="feld">
-          <label for="f-menge">Form</label>
+          <label for="f-menge">Form (freiwillig)</label>
           <input type="text" id="f-menge" maxlength="40" autocomplete="off" placeholder="z. B. Kapsel">
         </div>
         <div class="feld">
-          <label for="f-einheiten">Wie viele auf einmal?</label>
+          <label for="f-einheiten">Wie viele auf einmal? (freiwillig)</label>
           <input type="text" id="f-einheiten" inputmode="numeric" autocomplete="off" placeholder="z. B. 1">
         </div>
       </div>
-      <p class="klein leise" style="margin:-4px 0 0">„Form“ ist das, was du zählst, zum Beispiel Kapsel, Tablette oder Tropfen. „Wie viele auf einmal?“ meint, wie viele davon du bei einer Einnahme nimmst.</p>
+      <p class="klein leise" style="margin:-4px 0 0">„Form“ ist das, was du zählst, zum Beispiel Kapsel, Tablette oder Tropfen.</p>
       <fieldset style="border:0;padding:0;margin:0">
         <legend class="label" style="margin-bottom:6px">Wann nimmst du es?</legend>
         <div class="zeiten" id="f-zeiten"></div>
@@ -184,15 +191,15 @@
       <p class="fehler" id="f-zeiten-fehler" role="alert" hidden></p>
       <div class="zwei">
         <div class="feld">
-          <label for="f-vorrat">Wie viele hast du noch?</label>
+          <label for="f-vorrat">Wie viele hast du noch? (freiwillig)</label>
           <input type="text" id="f-vorrat" inputmode="numeric" autocomplete="off" placeholder="z. B. 60">
         </div>
         <div class="feld">
-          <label for="f-packung">Wie viele in einer Packung?</label>
+          <label for="f-packung">Wie viele in einer Packung? (freiwillig)</label>
           <input type="text" id="f-packung" inputmode="numeric" autocomplete="off" placeholder="z. B. 90">
         </div>
       </div>
-      <p class="klein leise" style="margin:-4px 0 0">Beide Zahlen sind freiwillig. Mit „Wie viele hast du noch?“ rechnet Kapselzeit aus, wann es leer wird, und zeigt es in deiner Liste. Wird es knapp, steht es auch unter „Bald nachkaufen“. Die Zahl je Packung braucht dort der Knopf „+ Packung“, wenn du nachkaufst.</p>
+      <p class="klein leise" style="margin:-4px 0 0">Mit dem Vorrat rechnet Kapselzeit aus, wann dein Vorrat leer wird, und zeigt es in deiner Liste.</p>
       <p class="fehler" id="f-zahl-fehler" role="alert" hidden></p>
       <div class="feld">
         <label for="f-notiz">Notiz</label>
@@ -205,7 +212,7 @@
     </form>
   </section>
 
-  <section class="karte" aria-labelledby="liste-titel">
+  <section class="karte" aria-labelledby="liste-titel" id="liste-karte">
     <h2 id="liste-titel">Deine Liste</h2>
     <div id="liste"></div>
     <p class="klein leise" style="margin:14px 0 0">Kapselzeit merkt sich nur, was du einträgst. Es gibt keine Empfehlungen zu Dosis, Kombination oder Wirkung. Halte dich an die Packungsbeilage oder an die Absprache mit deiner Ärztin oder deinem Arzt.</p>
@@ -263,7 +270,7 @@
       <input type="checkbox" id="zaehler-aus" style="width:22px;height:22px;margin-top:2px;flex:none">
       <span>Zähler abschalten. Dann meldet dieser Browser keine App-Starts und Knöpfe mehr.</span>
     </label>
-    <p class="leise" style="margin-top:10px">Version 1.4 vom 26.10.2026 · <a href="aenderungen.html">Was sich geändert hat</a> · <a href="https://github.com/klickmill/kapselzeit" target="_blank" rel="noopener noreferrer">Quellcode (für Entwickler)</a></p>
+    <p class="leise" style="margin-top:10px">Version 1.5 vom 29.10.2026 · <a href="aenderungen.html">Was sich geändert hat</a> · <a href="https://github.com/klickmill/kapselzeit" target="_blank" rel="noopener noreferrer">Quellcode (für Entwickler)</a></p>
   </section>
   <footer class="fuss">
     <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a>
@@ -287,15 +294,29 @@
   var BASIS = "https://klickmill.app";
   // Zähler-Schalter: liegt nur in diesem Browser, wird vor jedem Ping gelesen.
   var ZAEHLER_AUS = "kapselzeit-zaehler-aus";
-  function zaehlerAus() {
+  // Gespeicherte Wahl, gilt ab dem nächsten Start.
+  function zaehlerGespeichertAus() {
     try { return localStorage.getItem(ZAEHLER_AUS) === "1"; } catch (e) { return false; }
+  }
+  // In der laufenden Sitzung zählt das Kästchen selbst: lässt der Browser kein Speichern zu,
+  // bleibt der Zähler trotzdem aus, solange die Seite offen ist.
+  function zaehlerAus() {
+    var box = document.getElementById("zaehler-aus");
+    return box ? box.checked : zaehlerGespeichertAus();
   }
   (function () {
     var box = document.getElementById("zaehler-aus");
     if (!box) return;
-    box.checked = zaehlerAus();
+    var text = box.nextElementSibling, normal = text ? text.textContent : "";
+    box.checked = zaehlerGespeichertAus();
     box.addEventListener("change", function () {
-      try { localStorage.setItem(ZAEHLER_AUS, box.checked ? "1" : "0"); } catch (e) {}
+      var geklappt = true;
+      try {
+        if (box.checked) localStorage.setItem(ZAEHLER_AUS, "1"); else localStorage.removeItem(ZAEHLER_AUS);
+      } catch (e) { geklappt = false; }
+      if (text) text.textContent = !geklappt && box.checked
+        ? "Zähler aus, aber nur, bis du die Seite schließt. Dein Browser lässt das Speichern nicht zu."
+        : normal;
     });
   })();
   function ping(ev) {
@@ -424,13 +445,15 @@
     var tag = heute();
     $("datum-heute").textContent = kurzDatum(tag);
     $("willkommen").hidden = daten.willkommenWeg || daten.liste.length > 0;
+    $("datum-heute").hidden = !$("willkommen").hidden; // Datum erst nach dem Start
+    document.querySelector(".seite").classList.toggle("erststart", !daten.liste.length);
 
     // Heute
     var box = $("heute"); box.textContent = "";
     var gruppen = K.tagesliste(daten.liste);
     var log = daten.log[tag] || {};
     var gesamt = 0, erledigt = 0;
-    if (!gruppen.length) box.appendChild(el("p", "leise leer", daten.liste.length ? "Alles ist pausiert. Tipp unten in deiner Liste auf „Fortsetzen“." : "Noch nichts geplant. Trag unten ein, was du nimmst und wann."));
+    if (!gruppen.length) box.appendChild(el("p", "leise leer", daten.liste.length ? "Alles ist pausiert. Tipp unten in deiner Liste auf „Fortsetzen“." : "Noch nichts geplant. Trag oben unter „Neu eintragen“ ein, was du nimmst und wann."));
     gruppen.forEach(function (g) {
       box.appendChild(el("p", "zeit-kopf", g.name));
       g.eintraege.forEach(function (e) {
@@ -589,7 +612,7 @@
     if (!confirm("Alle Einträge, Häkchen und Einstellungen auf diesem Gerät löschen? Das lässt sich nicht rückgängig machen.")) return;
     try { localStorage.removeItem(SPEICHER); } catch (e) {}
     try { localStorage.removeItem(ZAEHLER_AUS); } catch (e) {}
-    var zb = document.getElementById("zaehler-aus"); if (zb) zb.checked = false;
+    var zb = document.getElementById("zaehler-aus"); if (zb) { zb.checked = zaehlerGespeichertAus(); zb.dispatchEvent(new Event("change")); } // auch den Satz daneben zurücksetzen
     daten = laden(); formularLeeren(); render(); zeigeHinweis("Alles gelöscht.");
   });
   $("einkauf-teilen").addEventListener("click", function () {
